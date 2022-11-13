@@ -1,0 +1,2 @@
+# Ecommerce creado con Django
+
