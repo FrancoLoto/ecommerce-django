@@ -27,7 +27,8 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool, default=True)
 
-ALLOWED_HOSTS = ['ecommerce-env.eba-6b3iv8rg.us-west-2.elasticbeanstalk.com']
+ALLOWED_HOSTS = ['ecommerce-env.eba-gzqyhuwq.us-west-2.elasticbeanstalk.com']
+
 
 
 # Application definition
