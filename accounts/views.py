@@ -23,7 +23,7 @@ def register(request):
     form = RegistrationForm()
 
     if request.method == 'POST':
-        
+
         form = RegistrationForm(request.POST)
         if form.is_valid():
             first_name = form.cleaned_data['first_name']
@@ -32,7 +32,12 @@ def register(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             username = email.split('@')[0]
-            user = Account.objects.create_user(first_name=first_name, last_name=last_name, email=email, username=username, password=password)
+            user = Account.objects.create_user(first_name=first_name,
+                                               last_name=last_name,
+                                               email=email,
+                                               username=username,
+                                               password=password
+                                               )
             user.phone_number = phone_number
             user.save()
 
@@ -41,15 +46,17 @@ def register(request):
             profile.profile_picture = "default/default-user.png"
             profile.save()
 
-
             current_site = get_current_site(request)
             mail_subject = 'Por favor, activa tu cuenta desde tu email'
-            body = render_to_string('accounts/account_verification_email.html', {
-                'user': user,
-                'domain': current_site,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                'token': default_token_generator.make_token(user),
-            })
+            body = render_to_string('accounts/account_verification_email.html',
+                                    {
+                                        'user': user,
+                                        'domain': current_site,
+                                        'uid': urlsafe_base64_encode(
+                                            force_bytes(user.pk)),
+                                        'token': default_token_generator
+                                        .make_token(user),
+                                    })
 
             to_email = email
             send_email = EmailMessage(mail_subject, body, to=[to_email])
@@ -57,9 +64,9 @@ def register(request):
 
             # messages.success(request, 'Se registró exitosamente')
 
-            return redirect('/accounts/login/?command=verification&email='+email)
+            return redirect(
+                '/accounts/login/?command=verification&email='+email)
 
-    
     context = {
         'form': form
     }
@@ -80,7 +87,8 @@ def login(request):
 
             try:
                 cart = Cart.objects.get(cart_id=_cart_id(request))
-                is_cart_item_exists = CartItem.objects.filter(cart=cart).exists()
+                is_cart_item_exists = CartItem.objects.filter(
+                    cart=cart).exists()
 
                 if is_cart_item_exists:
                     cart_item = CartItem.objects.filter(cart=cart)
@@ -98,7 +106,6 @@ def login(request):
                         ex_var_list.append(list(existing_variation))
                         id.append(item.id)
 
-
                     for pr in product_variation:
                         if pr in ex_var_list:
                             index = ex_var_list.index(pr)
@@ -112,7 +119,6 @@ def login(request):
                             for item in cart_item:
                                 item.user = user
                                 item.save()
-
             except:
                 pass
 
@@ -128,7 +134,6 @@ def login(request):
                     return redirect(nextPage)
             except:
                 return redirect('home') 
-
 
         else:
             messages.error(request, 'Los datos son incorrectos')
@@ -146,17 +151,15 @@ def logout(request):
     return redirect('login')
 
 
-
 def activate(request, uidb64, token):
 
     try:
         uid = urlsafe_base64_decode(uidb64).decode()
         user = Account._default_manager.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, Account.DoesNotExist):
+    except (TypeError, ValueError, OverflowError, Account.DoesNotExist):
         user = None
 
-
-    if user is not None and default_token_generator.check_token(user,token):
+    if user is not None and default_token_generator.check_token(user, token):
         user.is_active = True
         user.save()
         messages.success(request, 'Tu cuenta ha sido activada correctamente')
@@ -171,7 +174,8 @@ def activate(request, uidb64, token):
 @login_required(login_url='login')
 def dashboard(request):
 
-    orders = Order.objects.order_by('-created_at').filter(user_id=request.user.id, is_ordered=True)
+    orders = Order.objects.order_by('-created_at').filter(
+        user_id=request.user.id, is_ordered=True)
     orders_count = orders.count()
 
     userprofile = UserProfile.objects.get(user_id=request.user.id)
@@ -180,7 +184,6 @@ def dashboard(request):
         'orders_count': orders_count,
         'userprofile': userprofile,
     }
-    
 
     return render(request, 'accounts/dashboard.html', context)
 
@@ -207,7 +210,9 @@ def forgotPassword(request):
             send_email = EmailMessage(mail_subject, body, to=[to_email])
             send_email.send()
 
-            messages.success(request, 'Un email fue enviado a tu cuenta para cambiar tu contraseña')
+            messages.success(
+                request,
+                'Un email fue enviado a tu cuenta para cambiar tu contraseña')
             return redirect('login')
 
         else:
@@ -217,24 +222,21 @@ def forgotPassword(request):
     return render(request, 'accounts/forgotPassword.html')
 
 
-
 def resetpassword_validate(request, uidb64, token):
 
     try:
         uid = urlsafe_base64_decode(uidb64).decode()
         user = Account._default_manager.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, Account.DoesNotExist):
+    except (TypeError, ValueError, OverflowError, Account.DoesNotExist):
         user = None
 
-    
     if user is not None and default_token_generator.check_token(user, token):
-        request.session['uid'] = uid 
+        request.session['uid'] = uid
         messages.success(request, 'Por favor cambia tu contraseña')
         return redirect('resetPassword')
     else:
         messages.error(request, 'El link ha expirado')
         return redirect('login')
-
 
 
 def resetPassword(request):
@@ -252,10 +254,9 @@ def resetPassword(request):
             user.save()
             messages.success(request, 'La contraseña se cambió correctamente')
             return redirect('login')
-        else: 
+        else:
             messages.error(request, 'La contraseña no concuerda')
             return redirect('resetPassword')
-
 
     else:
         return render(request, 'accounts/resetPassword.html')
@@ -263,7 +264,8 @@ def resetPassword(request):
 
 def my_orders(request):
 
-    orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('-created_at')
+    orders = Order.objects.filter(
+        user=request.user, is_ordered=True).order_by('-created_at')
     context = {
         'orders': orders,
     }
@@ -275,9 +277,11 @@ def edit_profile(request):
 
     userprofile = get_object_or_404(UserProfile, user=request.user)
     if request.method == 'POST':
-        
+
         user_form = UserForm(request.POST, instance=request.user)
-        profile_form = UserProfileForm(request.POST, request.FILES, instance=userprofile)
+        profile_form = UserProfileForm(request.POST,
+                                       request.FILES,
+                                       instance=userprofile)
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
             profile_form.save()
@@ -314,15 +318,17 @@ def change_password(request):
             if success:
                 user.set_password(new_password)
                 user.save()
-                messages.success(request, "Su contraseña se actualizó correctamente")
+                messages.success(request,
+                                 "Su contraseña se actualizó correctamente")
                 return redirect('change_password')
 
             else:
-                messages.error(request, "Por favor, ingrese una contraseña válida")
+                messages.error(request,
+                               "Por favor, ingrese una contraseña válida")
                 return redirect('change_password')
 
         else:
             messages.error(request, "La contraseña no coincide")
             return redirect('change_password')
 
-    return render(request, 'accounts/change_password.html')    
+    return render(request, 'accounts/change_password.html')

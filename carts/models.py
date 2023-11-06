@@ -3,9 +3,8 @@ from store.models import Product, Variation
 from accounts.models import Account
 
 
-
 class Cart(models.Model):
-    
+
     cart_id = models.CharField(max_length=250, blank=True)
     date_added = models.DateField(auto_now_add=True)
 
@@ -21,7 +20,6 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, null=True)
     quantity = models.IntegerField()
     is_active = models.BooleanField(default=True)
-
 
     def subtotal(self):
         return self.product.price * self.quantity

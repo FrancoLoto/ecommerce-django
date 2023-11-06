@@ -10,18 +10,20 @@ from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 
 
-# Create your views here.
 def payments(request):
 
     body = json.loads(request.body)
-    order = Order.objects.get(user=request.user, is_ordered=False, order_number=body['orderID'])
+    order = Order.objects.get(user=request.user,
+                              is_ordered=False,
+                              order_number=body['orderID']
+                              )
 
     payment = Payment(
-        user = request.user,
-        payment_id = body['transID'],
-        payment_method = body['payment_method'],
-        amount_id = order.order_total, 
-        status = body['status'],
+        user=request.user,
+        payment_id=body['transID'],
+        payment_method=body['payment_method'],
+        amount_id=order.order_total,
+        status=body['status'],
     )
 
     payment.save()
@@ -35,7 +37,7 @@ def payments(request):
     for item in cart_items:
 
         orderproduct = OrderProduct()
-        orderproduct.order_id = order.id 
+        orderproduct.order_id = order.id
         orderproduct.payment = payment
         orderproduct.user_id = request.user.id
         orderproduct.product_id = item.product_id
@@ -50,11 +52,9 @@ def payments(request):
         orderproduct.variation.set(product_variation)
         orderproduct.save()
 
-
         product = Product.objects.get(id=item.product_id)
         product.stock -= item.quantity
         product.save()
-
 
     CartItem.objects.filter(user=request.user).delete()
 
@@ -76,7 +76,6 @@ def payments(request):
     return JsonResponse(data)
 
 
-
 def place_order(request, total=0, quantity=0):
 
     current_user = request.user
@@ -93,7 +92,6 @@ def place_order(request, total=0, quantity=0):
         total += (cart_item.product.price * cart_item.quantity)
         quantity += cart_item.quantity
 
-    
     tax = (2 * total)/100
     grand_total = total + tax
 
@@ -121,14 +119,17 @@ def place_order(request, total=0, quantity=0):
             yr = int(datetime.date.today().strftime('%Y'))
             mt = int(datetime.date.today().strftime('%m'))
             dt = int(datetime.date.today().strftime('%d'))
-            d = datetime.date(yr,mt,dt)
+            d = datetime.date(yr, mt, dt)
             current_date = d.strftime("%Y%m%d")
 
             order_number = current_date + str(data.id)
             data.order_number = order_number
             data.save()
 
-            order = Order.objects.get(user=current_user, is_ordered=False, order_number=order_number)
+            order = Order.objects.get(user=current_user,
+                                      is_ordered=False,
+                                      order_number=order_number
+                                      )
             context = {
                 'order': order,
                 'cart_items': cart_items,
@@ -136,7 +137,6 @@ def place_order(request, total=0, quantity=0):
                 'tax': tax,
                 'grand_total': grand_total,
             }
-
 
             return render(request, 'orders/payments.html', context)
     else:
@@ -155,8 +155,8 @@ def order_complete(request):
         subtotal = 0
         for i in ordered_products:
             subtotal += i.product_price*i.quantity
-        
-        payment = Payment.objects.get(payment_id=payment.id)
+
+        payment = Payment.objects.get(payment_id=transID)
 
         context = {
             'order': order,
@@ -169,9 +169,6 @@ def order_complete(request):
 
         return render(request, 'orders/order_complete.html', context)
 
-    except(Payment.DoesNotExist, Order.DoesNotExist):
+    except (Payment.DoesNotExist, Order.DoesNotExist):
 
         return redirect('home')
-
-
-

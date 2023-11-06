@@ -3,7 +3,6 @@ from accounts.models import Account
 from store.models import Product, Variation
 
 
-# Create your models here.
 class Payment(models.Model):
 
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
@@ -11,8 +10,7 @@ class Payment(models.Model):
     payment_method = models.CharField(max_length=100)
     amount_id = models.CharField(max_length=100)
     status = models.CharField(max_length=100)
-    created_at =models.DateTimeField(auto_now_add=True)
-    
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
 
@@ -29,7 +27,11 @@ class Order(models.Model):
     )
 
     user = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True)
-    payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, blank=True, null=True)
+    payment = models.ForeignKey(Payment,
+                                on_delete=models.SET_NULL,
+                                blank=True,
+                                null=True
+                                )
     order_number = models.CharField(max_length=20)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -49,7 +51,6 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
     def __str__(self):
 
         return self.first_name
@@ -63,11 +64,14 @@ class Order(models.Model):
         return f"{self.address_line_1} {self.address_line_2}"
 
 
-
 class OrderProduct(models.Model):
 
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    payment = models.ForeignKey(Payment, on_delete=models.CASCADE, blank=True, null=True)
+    payment = models.ForeignKey(Payment,
+                                on_delete=models.CASCADE,
+                                blank=True,
+                                null=True
+                                )
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     variation = models.ManyToManyField(Variation, blank=True)
@@ -75,7 +79,7 @@ class OrderProduct(models.Model):
     product_price = models.FloatField()
     ordered = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True) 
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
 
